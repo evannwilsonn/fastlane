@@ -199,6 +199,11 @@ export class Simulation {
   course!: TrafficCourse;
   cars: Car[] = [];
   leader!: Car;
+  /**
+   * The car the page follows and highlights: the one furthest ahead of traffic right now among
+   * those still driving. The leader (best score so far) can have crashed; this one hasn't.
+   */
+  followed!: Car;
   generation = 1;
   level = 1;
   /** Generations on this level that reached its goal; CLEARS_TO_PASS of them pass the level. */
@@ -293,6 +298,7 @@ export class Simulation {
       });
     }
     this.leader = this.cars[0];
+    this.followed = this.cars[0];
     this.leaderBest = 0;
     this.framesSinceLeaderGain = 0;
     this.frames = 0;
@@ -403,6 +409,9 @@ export class Simulation {
     }
 
     this.leader = this.cars.reduce((a, b) => (this.score(b) > this.score(a) ? b : a));
+    const driving = this.cars.filter((c) => !c.damaged);
+    const ahead = (c: Car) => c.progress - this.trafficTravel;
+    this.followed = driving.length ? driving.reduce((a, b) => (ahead(b) > ahead(a) ? b : a)) : this.leader;
     if (this.mode === "KEYS") return false;
 
     if (this.score(this.leader) > this.leaderBest + 1) {

@@ -159,9 +159,14 @@ function headlights(ctx: CanvasRenderingContext2D, car: Car): void {
 }
 
 let camX = 0;
+let camY: number | null = null;
 function drawRoad(): void {
   const ctx = roadCtx;
-  const leader = sim.leader;
+  // Follows the best car still driving. When that changes, the camera glides to the new car
+  // instead of jumping; a new layout (far away) snaps.
+  const leader = sim.followed;
+  if (camY === null || Math.abs(leader.y - camY) > 900) camY = leader.y;
+  else camY += (leader.y - camY) * 0.18;
   const theme = themeFor(sim.levelSpec.road, sim.settings.seed);
   ctx.clearRect(0, 0, viewW, viewH);
   if (theme.ground) {
@@ -174,10 +179,10 @@ function drawRoad(): void {
   ctx.scale(scale, scale);
   // Follow the road through its curves, easing so the camera doesn't jerk sideways.
   camX += (sim.road.centerX(leader.y - 150) - camX) * 0.08;
-  ctx.translate(-camX, -leader.y);
+  ctx.translate(-camX, -camY);
 
-  const viewTop = leader.y - (viewH * 0.74) / scale;
-  const viewBottom = leader.y + (viewH * 0.26) / scale;
+  const viewTop = camY - (viewH * 0.74) / scale;
+  const viewBottom = camY + (viewH * 0.26) / scale;
   sim.road.draw(
     ctx,
     {
@@ -213,7 +218,7 @@ function drawRoad(): void {
 }
 
 function drawBrain(now: number): void {
-  const brain = sim.leader.brain;
+  const brain = sim.followed.brain;
   const { width, height } = brainCanvas.getBoundingClientRect();
   if (!(brain instanceof Genome)) {
     brainCtx.clearRect(0, 0, width, height);
@@ -243,7 +248,7 @@ function drawChart(): void {
 }
 
 function brainSummary(): string {
-  const g = sim.leader.brain instanceof Genome ? sim.leader.brain : null;
+  const g = sim.followed.brain instanceof Genome ? sim.followed.brain : null;
   if (!g) return "";
   const n = g.hiddenCount;
   return `${n} hidden ${n === 1 ? "neuron" : "neurons"}, ${g.enabledCount} links, ${sim.neat.species.length || 1} species`;
