@@ -29,6 +29,9 @@ const ui = {
   alive: $("#stat-alive"),
   run: $("#stat-run"),
   level: $("#stat-level"),
+  levelNum: $("#stat-level-num"),
+  place: $("#stat-place"),
+  pips: $("#stat-pips"),
   population: $<HTMLInputElement>("#population"),
   populationOut: $<HTMLOutputElement>("#population-out"),
   mutation: $<HTMLInputElement>("#mutation"),
@@ -112,6 +115,27 @@ new ResizeObserver(() => {
 
 function announce(msg: string): void {
   ui.status.textContent = msg;
+  // Replay the board's entrance so a new message is noticed.
+  ui.status.classList.remove("is-fresh");
+  void ui.status.offsetWidth;
+  ui.status.classList.add("is-fresh");
+}
+
+/** Progress pips: one per layout that has to be cleared, filled as they are. */
+function setPips(done: number, total: number, label: string): void {
+  const key = `${done}/${total}`;
+  if (ui.pips.dataset.key === key) return;
+  ui.pips.dataset.key = key;
+  ui.pips.replaceChildren(
+    ...Array.from({ length: total }, (_, i) => {
+      const li = document.createElement("li");
+      if (i < done) li.className = "is-done";
+      return li;
+    }),
+  );
+  const caption = document.createElement("span");
+  caption.textContent = `${done} of ${total} ${label}`;
+  ui.pips.append(caption);
 }
 
 /** Two beams of light ahead of a car, for night roads. */
@@ -231,13 +255,16 @@ function updateStats(now: number): void {
   lastStats = now;
   const keys = sim.mode === "KEYS";
   ui.generation.textContent = keys ? "Manual" : String(sim.generation);
-  ui.alive.textContent = keys ? "1" : `${sim.alive} of ${sim.cars.length}`;
+  ui.alive.textContent = keys ? "1" : `${sim.alive}/${sim.cars.length}`;
   const goal = sim.levelSpec.goal;
   const passed = Math.max(sim.bestPassed, sim.passedBy(sim.leader));
-  ui.run.textContent = goal ? `${passed} of ${goal}` : String(passed);
+  ui.run.textContent = goal ? `${passed}/${goal}` : String(passed);
   // The world's "Sea fog" is just fog on a city highway at night.
   const weather = sim.hazards.map((h) => (h === "fog" && sim.light === "night" ? "Fog at night" : HAZARD_NAMES[h])).join(", ");
-  ui.level.textContent = `${sim.level}: ${weather || sim.levelSpec.name} (${sim.clears}/${CLEARS_TO_PASS})`;
+  ui.levelNum.textContent = String(sim.level);
+  ui.level.textContent = weather || sim.levelSpec.name;
+  ui.place.textContent = `${themeFor(sim.levelSpec.road, sim.settings.seed).name}, ${roadShapeText(sim.levelSpec.road)}`;
+  setPips(sim.clears, CLEARS_TO_PASS, "layouts cleared");
   ui.brainNote.textContent = brainSummary();
 }
 

@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Self-Driving Car</title>
-    <meta name="description" content="A population of cars learns to drive with a tiny neural network and a genetic algorithm." />
+    <title>Fastlane</title>
+    <meta name="description" content="Cars learn to beat traffic on a highway that never ends, growing NEAT brains from scratch." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&display=swap" rel="stylesheet" />
@@ -13,21 +13,47 @@
     <div class="app">
       <main class="road-panel">
         <canvas id="road" tabindex="0" aria-label="Simulation: the leading car is yellow, other cars in its generation are faint white, traffic is grey."></canvas>
+        <div class="hud">
+          <section class="sign" aria-label="Level">
+            <p class="hud-kicker">Level <b id="stat-level-num">1</b></p>
+            <p class="hud-title" id="stat-level">Seven cars</p>
+            <p class="hud-place" id="stat-place">Highway, 3 lanes</p>
+            <ol class="pips" id="stat-pips" aria-label="Layouts cleared"></ol>
+          </section>
+          <dl class="hud-stats" aria-label="This generation">
+            <div><dt>Gen</dt><dd id="stat-generation">1</dd></div>
+            <div><dt>Driving</dt><dd id="stat-alive">0</dd></div>
+            <div><dt>Passed</dt><dd id="stat-run">0</dd></div>
+          </dl>
+        </div>
+        <p id="status" class="vms" role="status" aria-live="polite">Generation 1 starts from random brains. Give it a few runs.</p>
       </main>
 
       <aside class="rail">
-        <header class="sign sign--title">
-          <h1>Self-driving car</h1>
-          <p>Every car starts with the smallest possible brain: sensors wired straight to the controls. Each generation the best brains breed, and mutations can add neurons and connections, so the network grows as the levels get harder. Every three levels the road changes: two lanes, curves, construction zones, new places.</p>
+        <header class="brand">
+          <div class="brand-row">
+            <div class="sign"><h1>Fastlane</h1></div>
+            <a class="sister" href="https://github.com/evannwilsonn/crosstown" target="_blank" rel="noopener">Crosstown &#8599;</a>
+          </div>
+          <p class="brand-tagline">Cars learn to beat traffic on a highway that never ends.</p>
+          <details class="disclosure about">
+            <summary>How it works</summary>
+            <p>Every car starts with the smallest possible brain: sensors wired straight to the controls. Each generation the best brains breed, and mutations can add neurons and connections, so the network grows as the levels get harder. Every three levels the road changes: two lanes, curves, construction zones, weather, new places.</p>
+          </details>
         </header>
 
-        <section class="sign sign--guide" aria-label="Progress">
-          <dl>
-            <div><dt>Generation</dt><dd id="stat-generation">1</dd></div>
-            <div><dt>Still driving</dt><dd id="stat-alive">0</dd></div>
-            <div><dt>Cars passed</dt><dd id="stat-run">0</dd></div>
-            <div><dt>Level</dt><dd id="stat-level">1</dd></div>
-          </dl>
+        <section class="panel run" aria-label="Run">
+          <fieldset id="speed" class="segmented">
+            <legend>Speed</legend>
+            <label><input type="radio" name="speed" value="1" checked /><span>1×</span></label>
+            <label><input type="radio" name="speed" value="3" /><span>3×</span></label>
+            <label><input type="radio" name="speed" value="8" /><span>8×</span></label>
+            <label><input type="radio" name="speed" value="max" /><span>Max</span></label>
+          </fieldset>
+          <div class="actions">
+            <button id="next" class="btn btn--primary" type="button">Next generation</button>
+            <button id="drive" class="btn" type="button" aria-pressed="false">Drive it yourself</button>
+          </div>
         </section>
 
         <section class="panel" aria-labelledby="chart-title">
@@ -46,45 +72,34 @@
               <span class="swatch swatch--neg"></span>Inhibits
             </p>
           </div>
-          <canvas id="brain" aria-label="The leading car's brain as it has grown: seven sensors and the car's speed at the bottom, four controls at the top (forward, left, right, reverse), and any hidden neurons evolution has added in between. Yellow links excite, blue inhibit."></canvas>
+          <canvas id="brain" aria-label="The leading car's brain as it has grown: seven sensors, the car's speed, the road ahead and the road condition at the bottom, four controls at the top (forward, left, right, reverse), and any hidden neurons evolution has added in between. Yellow links excite, blue inhibit."></canvas>
           <p id="brain-note" class="help help--quiet"></p>
         </section>
 
-        <section class="panel controls" aria-labelledby="controls-title">
-          <h2 id="controls-title" class="visually-hidden">Controls</h2>
-
-          <label class="field">
-            <span class="field-label">Cars per generation <output id="population-out" for="population">100</output></span>
-            <input id="population" type="range" min="10" max="600" step="10" value="100" />
-          </label>
-
-          <label class="field">
-            <span class="field-label">Mutation <output id="mutation-out" for="mutation">10%</output></span>
-            <input id="mutation" type="range" min="0" max="0.5" step="0.01" value="0.1" />
-          </label>
-
-          <fieldset id="speed" class="segmented">
-            <legend>Sim speed</legend>
-            <label><input type="radio" name="speed" value="1" checked /><span>1×</span></label>
-            <label><input type="radio" name="speed" value="3" /><span>3×</span></label>
-            <label><input type="radio" name="speed" value="8" /><span>8×</span></label>
-            <label><input type="radio" name="speed" value="max" /><span>Max</span></label>
-          </fieldset>
-
-          <label class="toggle">
-            <input id="sensors" type="checkbox" checked />
-            <span>Show the leader's sensors</span>
-          </label>
-
-          <div class="actions">
-            <button id="next" class="btn btn--primary" type="button">Next generation</button>
-            <button id="drive" class="btn" type="button" aria-pressed="false">Drive it yourself</button>
-            <button id="download" class="btn btn--quiet" type="button">Copy brain JSON</button>
-            <button id="forget" class="btn btn--quiet" type="button">Reset learning</button>
-          </div>
+        <section class="panel">
+          <details class="disclosure">
+            <summary>Tuning</summary>
+            <div class="controls">
+              <label class="field">
+                <span class="field-label">Cars per generation <output id="population-out" for="population">100</output></span>
+                <input id="population" type="range" min="10" max="600" step="10" value="100" />
+              </label>
+              <label class="field">
+                <span class="field-label">Mutation <output id="mutation-out" for="mutation">10%</output></span>
+                <input id="mutation" type="range" min="0" max="0.5" step="0.01" value="0.1" />
+              </label>
+              <label class="toggle">
+                <input id="sensors" type="checkbox" checked />
+                <span>Show the leader's sensors</span>
+              </label>
+            </div>
+          </details>
         </section>
 
-        <p id="status" class="status" role="status" aria-live="polite">Generation 1 starts from random brains. Give it a few runs.</p>
+        <footer class="rail-foot">
+          <button id="download" class="link-btn" type="button">Copy brain JSON</button>
+          <button id="forget" class="link-btn" type="button">Reset learning</button>
+        </footer>
       </aside>
     </div>
     <script type="module" src="/src/main.ts"></script>
