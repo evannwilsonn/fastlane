@@ -1,9 +1,9 @@
 {
-  "name": "self-driving-car",
+  "name": "fastlane",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "A population of cars learns to drive with a tiny neural network and a genetic algorithm. TypeScript + Canvas.",
+  "description": "Cars learn to drive a highway that never ends, growing NEAT brains from scratch. TypeScript + Canvas.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
